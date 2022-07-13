@@ -1,0 +1,12 @@
+{
+  "name": "WebSockets",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.8.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.19.0"
+  }
+}

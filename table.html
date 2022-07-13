@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Онлайн таблица</title>
+</head>
+<body>
+    <div id="app">
+        <table id="table"></table>
+    </div>
+    <script>
+        const $table = document.getElementById('table');
+        const socket = new WebSocket('ws://localhost:8000');
+        const fillCell = (id, value) => {
+            const $cell = document.getElementById(id);
+            const $input = $cell.lastElementChild;
+            $input.value = value;
+        };
+        const genBaseTable = (rows, cols) => {
+            for (let row = 0; row < rows; row++) {
+                const $tr = document.createElement('tr');
+                for (let col = 0; col < cols; col++) {
+                    const isRowHead = row === 0;
+                    const $colCell = document.createElement(`${isRowHead ? 'th' : 'td'}`);
+                    if (isRowHead) {
+                        $colCell.textContent = col + 1;
+                    } else {
+                        const $inp = document.createElement('input');
+                        $inp.addEventListener('input', e => {
+                            const value = e.target.value.trim();
+                            const id = e.target.parentElement.getAttribute('id');
+                            if (value !== '') {
+                                const data = {
+                                    type: 'common.table.message',
+                                    cell: { value, id }
+                                };
+                                socket.send(JSON.stringify(data));
+                                fillCell(id, value);
+                            }
+                        });
+                        $colCell.id = `cell-${row}-${col}`;
+                        $colCell.appendChild($inp)
+                    }
+                    $tr.appendChild($colCell);
+                }
+                $table.appendChild($tr);
+            }
+        };
+
+        genBaseTable(3, 3);
+
+        socket.onopen = () => {
+            console.log('Open');
+        };
+
+        socket.onclose = () => {
+            console.log('Socket closed');
+        };
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'common.table.message') {
+                fillCell(data.cell.id, data.cell.value);
+            }
+        };
+    </script>
+</body>
+</html>
